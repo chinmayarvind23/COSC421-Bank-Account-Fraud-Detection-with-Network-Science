@@ -6,7 +6,7 @@ Team Members: Chinmay Arvind, Jerry Fan, Dmitry Kostyukov, Ryan Millar
 
 ## Source Code
 
-The source code for this project is here: [Main R code](code/code.qmd) and here is the website with the same code (please zoom out to view the code if using this link): [Bank Account Fraud Detection](https://bank-account-fraud-detection-with-network-science.vercel.app/)
+The source code for this project is here: [Main R code](code/code.qmd) and here is the website with the same code (please zoom out and zoom in to view the code if using this link, apologies for the formatting issues): [Bank Account Fraud Detection](https://bank-account-fraud-detection-with-network-science.vercel.app/)
 
 ## Final Report [13 pages] (including references)
 
