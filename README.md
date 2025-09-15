@@ -29,12 +29,6 @@ This project aims to conduct a data-driven & thorough network analysis of bank a
 
 This project uses data from the following Kaggle dataset: [https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022/data](https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022/data) (Only the Base.csv file is used in our analysis and is zipped and stored in the repo). The direct repo path to the zip file of the Base.csv file is here: [Base.csv](compressed_data/data.zip). Please unzip the zip file to access the Base.csv file, and create a directory titled data in the project's root directory and insert the CSV file there. Once that is done, copy the file path of the CSV file and paste it into the [Main R code](code/code.qmd) file where the data is loaded (line 59 of )There are 32 columns in the dataset, and the Base.csv file was selected to be used for this project (containing 1 million records), on which we have performed data modeling, cleaning, preparation, dimensionality reduction, feature engineering, data analysis, and visualization on to determine the most important predictors of bank account fraud from the dataset, and use the identified most important columns along with computed network metrics as our final set of predictors to solve the above research questions, and attempt to provide an approximate method of bank account fraud estimation given a dataset with relevant predictors. Dataset citation:
 
----
-
-### @article}:}, ###},} for}}, author=rgio and Pombal, Jos and Alves, Duarte and Cruz, Andr and Saleiro, Pedro and ###Ribeiro, Rita P. ###and Gama, Joo and Bizarro, Pedro}, journal=, year= }
-
----
-
 ## Tech Stack
 
 R, Quarto, Azure Blob Storage, GitHub Pages/Vercel
