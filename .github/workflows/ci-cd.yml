@@ -41,8 +41,8 @@ jobs:
 
       - name: Install notebook dependencies
         run: |
-          Rscript -e "install.packages(c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify'))"
-          Rscript -e "pkgs <- c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify'); stopifnot(all(vapply(pkgs, requireNamespace, quietly=TRUE, FUN.VALUE=logical(1))))"
+          Rscript -e "install.packages(c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify','VennDiagram'))"
+          Rscript -e "pkgs <- c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify','VennDiagram'); stopifnot(all(vapply(pkgs, requireNamespace, quietly=TRUE, FUN.VALUE=logical(1))))"
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
