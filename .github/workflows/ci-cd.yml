@@ -1,4 +1,4 @@
-name: Build and Deploy Quarto Site
+name: Build and Deploy Quarto Notebook
 
 on:
   push:
@@ -22,6 +22,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -33,52 +34,42 @@ jobs:
           r-version: '4.4.1'
           use-public-rspm: true
 
-      - name: Install system dependency for R packages
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libuv1-dev
+          sudo apt-get install -y libuv1-dev libcurl4-openssl-dev libssl-dev libxml2-dev libglpk-dev
 
-      - name: Install Quarto rendering dependencies
+      - name: Install notebook dependencies
         run: |
-          Rscript -e "install.packages(c('knitr', 'rmarkdown'))"
-          Rscript -e "stopifnot(requireNamespace('knitr', quietly=TRUE), requireNamespace('rmarkdown', quietly=TRUE))"
+          Rscript -e "install.packages(c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify'))"
+          Rscript -e "pkgs <- c('knitr','rmarkdown','tidyverse','visNetwork','igraph','httr','dotenv','ggfortify'); stopifnot(all(vapply(pkgs, requireNamespace, quietly=TRUE, FUN.VALUE=logical(1))))"
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Make notebook source CI-safe
-        shell: bash
+      - name: Prepare repository dataset
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
+          rm -rf data .ci-data
+          mkdir -p data .ci-data
+          unzip -q compressed_data/data.zip -d .ci-data
+          BASE_CSV="$(find .ci-data -type f -name 'Base.csv' -print -quit)"
+          if [ -z "$BASE_CSV" ]; then
+            echo "Base.csv was not found inside compressed_data/data.zip"
+            exit 1
+          fi
+          cp "$BASE_CSV" data/Base.csv
+          test -s data/Base.csv
 
-          path = Path('code/code.qmd')
-          text = path.read_text()
-
-          # Remove local environment/package-management side effects from the
-          # deployment copy. Package installation belongs in this workflow.
-          text = re.sub(r'^\s*renv::.*\n?', '', text, flags=re.MULTILINE)
-          text = re.sub(r'^\s*source\(["\']\.\./renv/activate\.R["\']\).*\n?', '', text, flags=re.MULTILINE)
-          text = re.sub(r'^\s*install\.packages\(.*\)\s*\n?', '', text, flags=re.MULTILINE)
-
-          # Make the data reference portable instead of machine-specific.
-          text = text.replace(
-              '/Users/chinmayarvind/Documents/UBC/UBC Coursework/COSC 421/Course Project/Bank-Account-Fraud-Detection-with-Network-Science/data/Base.csv',
-              '../data/Base.csv'
-          )
-          text = text.replace(
-              '/Users/chinmayarvind/Documents/UBC/UBC Coursework/COSC 421/Course Project/Bank-Account-Fraud-Detection-with-Network-Science/.env',
-              '../.env'
-          )
-
-          path.write_text(text)
-          PY
-
-      - name: Render Quarto notebook
+      - name: Prepare CI-safe notebook
         working-directory: code
+        run: Rscript prepare_ci_notebook.R
+
+      - name: Execute and render Quarto notebook
+        working-directory: code
+        env:
+          CI: 'true'
         run: |
-          quarto render code.qmd --no-execute --output-dir ../_site
+          quarto render code-ci.qmd --execute --output-dir ../_site
           test -f ../_site/index.html
 
       - name: Configure GitHub Pages
