@@ -16,6 +16,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  RENV_CONFIG_AUTOLOADER_ENABLED: "FALSE"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,14 +33,49 @@ jobs:
           r-version: '4.4.1'
           use-public-rspm: true
 
-      - name: Install R rendering dependencies
+      - name: Install system dependency for R packages
         run: |
-          Rscript -e "install.packages(c('knitr', 'rmarkdown'), repos='https://cloud.r-project.org')"
+          sudo apt-get update
+          sudo apt-get install -y libuv1-dev
+
+      - name: Install Quarto rendering dependencies
+        run: |
+          Rscript -e "install.packages(c('knitr', 'rmarkdown'))"
+          Rscript -e "stopifnot(requireNamespace('knitr', quietly=TRUE), requireNamespace('rmarkdown', quietly=TRUE))"
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render R/Quarto site
+      - name: Make notebook source CI-safe
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('code/code.qmd')
+          text = path.read_text()
+
+          # Remove local environment/package-management side effects from the
+          # deployment copy. Package installation belongs in this workflow.
+          text = re.sub(r'^\s*renv::.*\n?', '', text, flags=re.MULTILINE)
+          text = re.sub(r'^\s*source\(["\']\.\./renv/activate\.R["\']\).*\n?', '', text, flags=re.MULTILINE)
+          text = re.sub(r'^\s*install\.packages\(.*\)\s*\n?', '', text, flags=re.MULTILINE)
+
+          # Make the data reference portable instead of machine-specific.
+          text = text.replace(
+              '/Users/chinmayarvind/Documents/UBC/UBC Coursework/COSC 421/Course Project/Bank-Account-Fraud-Detection-with-Network-Science/data/Base.csv',
+              '../data/Base.csv'
+          )
+          text = text.replace(
+              '/Users/chinmayarvind/Documents/UBC/UBC Coursework/COSC 421/Course Project/Bank-Account-Fraud-Detection-with-Network-Science/.env',
+              '../.env'
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Render Quarto notebook
         working-directory: code
         run: |
           quarto render code.qmd --no-execute --output-dir ../_site
