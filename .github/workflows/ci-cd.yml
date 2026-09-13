@@ -69,11 +69,36 @@ jobs:
         env:
           CI: 'true'
         run: |
-          quarto render code-ci.qmd --execute --output-dir ../_site
-          if [ -f ../_site/code/index.html ]; then
-            cp -a ../_site/code/. ../_site/
+          # Quarto resolves --output-dir from the project root, not code/.
+          quarto render code-ci.qmd --execute --output-dir _site
+
+      - name: Prepare and validate Pages artifact
+        shell: bash
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          if [ ! -s _site/code/index.html ]; then
+            echo "::error::Quarto did not produce $GITHUB_WORKSPACE/_site/code/index.html"
+            exit 1
           fi
-          test -f ../_site/index.html
+
+          # Keep Quarto's directory layout so relative CSS/JS/figure links work.
+          # The Pages root redirects to the notebook instead of relocating it.
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Bank Account Fraud Detection</title>
+            <meta http-equiv="refresh" content="0; url=code/index.html">
+            <script>window.location.replace("code/index.html" + window.location.search + window.location.hash);</script>
+          </head>
+          <body><a href="code/index.html">Open the Bank Account Fraud Detection notebook</a></body>
+          </html>
+          HTML
+          touch _site/.nojekyll
+          test -s _site/index.html
+          echo "Validated Pages entry point and rendered notebook in $GITHUB_WORKSPACE/_site"
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
