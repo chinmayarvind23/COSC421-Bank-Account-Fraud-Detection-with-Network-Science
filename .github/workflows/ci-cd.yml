@@ -70,6 +70,9 @@ jobs:
           CI: 'true'
         run: |
           quarto render code-ci.qmd --execute --output-dir ../_site
+          if [ -f ../_site/code/index.html ]; then
+            cp -a ../_site/code/. ../_site/
+          fi
           test -f ../_site/index.html
 
       - name: Configure GitHub Pages
